@@ -12,7 +12,7 @@ If you want to use `NVPL.jl` in your project, make sure it is the first package 
 
 ## Requirements
 
-NVPL is only available on Linux 64-bit systems, and only for CPUs with [Armv8.1-A or later architecture](https://docs.nvidia.com/nvpl/latest/#cpu-support). ILP64 is used by default.
+NVPL is only available on Linux 64-bit systems, and only for CPUs with [Armv8.1-A or later architecture](https://docs.nvidia.com/nvpl/latest/#cpu-support). ILP64 is used by default; OpenBLAS is used as a fallback for `{s,d}gemmt`.
 
 ## To Install:
 
@@ -36,6 +36,7 @@ julia> using NVPL
 julia> BLAS.get_config()
 LinearAlgebra.BLAS.LBTConfig
 Libraries:
+├ [ILP64] libopenblas64_.so
 ├ [ILP64] libnvpl_blas_ilp64_gomp.so
 └ [ILP64] libnvpl_lapack_ilp64_gomp.so
 ```

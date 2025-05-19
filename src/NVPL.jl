@@ -1,6 +1,7 @@
 module NVPL
 
 # using NVPL_jll
+using OpenBLAS_jll
 
 # Without NVPL_jll, we have to load manually
 include("localSupport.jl")
@@ -26,29 +27,32 @@ function lbt_forward_to_nvpl(; layer::Threading = THREADING_GNU)
         return
     end
 
+    # Use OpenBLAS for sgemmt and dgemmt
+    BLAS.lbt_forward(OpenBLAS_jll.libopenblas_path; clear=true)
+
     if layer == THREADING_GNU
         if Base.USE_BLAS64
             # Load ILP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_ilp64_gomp; clear=true, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_blas_ilp64_gomp; clear=false)
             # Load ILP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_ilp64_gomp; clear=false, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_lapack_ilp64_gomp; clear=false)
         else
             # Load LP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_lp64_gomp; clear=true, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_blas_lp64_gomp; clear=false)
             # Load LP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_lp64_gomp; clear=false, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_lapack_lp64_gomp; clear=false)
         end
     elseif layer == THREADING_SEQUENTIAL
         if Base.USE_BLAS64
             # Load ILP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_ilp64_seq; clear=true, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_blas_ilp64_seq; clear=false)
             # Load ILP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_ilp64_seq; clear=false, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_lapack_ilp64_seq; clear=false)
         else
             # Load LP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_lp64_seq; clear=true, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_blas_lp64_seq; clear=false)
             # Load LP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_lp64_seq; clear=false, suffix_hint="")
+            BLAS.lbt_forward(libnvpl_lapack_lp64_seq; clear=false)
         end
     else
         isinteractive() && @warn "Unsupported NVPL threading layer: $layer"

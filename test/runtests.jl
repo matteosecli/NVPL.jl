@@ -13,7 +13,7 @@ using Pkg
 # using NVPL_jll, NVPL, Test, SpecialFunctions, Pkg
 
 # Without NVPL_jll, we have to load manually
-using NVPL, Test, SpecialFunctions, Pkg
+using OpenBLAS_jll, NVPL, Test, SpecialFunctions, Pkg
 include("../src/localSupport.jl")
 
 if !NVPL_jll.is_available()
@@ -24,8 +24,9 @@ else
 end
 
 @testset "Sanity Tests" begin
-    @test LinearAlgebra.BLAS.get_config().loaded_libs[1].libname == libnvpl_blas_ilp64_gomp
-    @test LinearAlgebra.BLAS.get_config().loaded_libs[2].libname == libnvpl_lapack_ilp64_gomp
+    @test LinearAlgebra.BLAS.get_config().loaded_libs[1].libname == OpenBLAS_jll.libopenblas_path
+    @test LinearAlgebra.BLAS.get_config().loaded_libs[2].libname == libnvpl_blas_ilp64_gomp
+    @test LinearAlgebra.BLAS.get_config().loaded_libs[3].libname == libnvpl_lapack_ilp64_gomp
     @test LinearAlgebra.peakflops() > 0
 end
 
