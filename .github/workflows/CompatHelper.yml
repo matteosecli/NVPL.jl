@@ -1,0 +1,22 @@
+name: CompatHelper
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  CompatHelper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+          arch: x64
+          show-versioninfo: true
+      - name: Pkg.add
+        run: julia --color=yes -e 'using Pkg; Pkg.add("CompatHelper")'
+      - name: CompatHelper.main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMPATHELPER_PRIV: ${{ secrets.FUTURETAGBOT_PRIVATE_KEY }}
+        run: julia --color=yes -e 'using CompatHelper; CompatHelper.main(; include_jll = true)'

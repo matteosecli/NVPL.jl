@@ -1,0 +1,31 @@
+name = "NVPL"
+uuid = "a79b0d9e-75b2-4b0c-8a77-e69f648318a4"
+authors = ["Matteo Seclì <secli.matteo@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NVPL_jll = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+
+[compat]
+julia = "1.9"
+Artifacts = "1"
+NVPL_jll = "25.1.1"
+
+[extras]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Dates", "Distributed", "Printf", "Pkg", "Random", "REPL", "Sockets", "SparseArrays", "SpecialFunctions", "Test"]

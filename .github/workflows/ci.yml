@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: "master"
+    tags: ["*"]
+  pull_request:
+  release:
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+        arch:
+          - aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - name: Cache artifacts
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: |
+            ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+      - name: Build package
+        shell: julia --color=yes --project="" {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.build("NVPL"; verbose=true)
+      - uses: julia-actions/julia-runtest@latest
+        env:
+          # Loading NVPL during the tests can create an environment variable for OpenMP that is visible after the tests (MKL.jl#130)
+          JULIA_TEST_CHECK_MUTATED_ENV: "false"
