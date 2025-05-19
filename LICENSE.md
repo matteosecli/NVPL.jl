@@ -20,4 +20,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-NVPL is licensed under the [Intel Simplified Software License](https://docs.nvidia.com/nvpl/latest/license.html).
+NVPL is licensed under the [NVIDIA Software License Agreement](https://docs.nvidia.com/nvpl/latest/license.html).
