@@ -54,8 +54,8 @@ end
 end
 
 @testset "NVPL global threads" begin
-    @test NVPL.blas_get_max_threads() == Threads.nthreads()
-    @test NVPL.lapack_get_max_threads() == Threads.nthreads()
+    @test NVPL.blas_get_max_threads() == Sys.CPU_THREADS
+    @test NVPL.lapack_get_max_threads() == Sys.CPU_THREADS
     # TODO: verify that BLAS/LAPACK are actually using 1 thread after setting
     NVPL.blas_set_num_threads(1)
     NVPL.blas_set_num_threads(0)  # default is 0, which means following the threading runtime
