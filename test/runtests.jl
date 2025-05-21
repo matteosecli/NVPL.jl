@@ -53,6 +53,18 @@ end
     end
 end
 
+@testset "NVPL global threads" begin
+    @test NVPL.blas_get_max_threads() == Threads.nthreads()
+    @test NVPL.lapack_get_max_threads() == Threads.nthreads()
+    # TODO: verify that BLAS/LAPACK are actually using 1 thread after setting
+    NVPL.blas_set_num_threads(1)
+    NVPL.blas_set_num_threads(0)  # default is 0, which means following the threading runtime
+    NVPL.lapack_set_num_threads(1)
+    NVPL.lapack_set_num_threads(0)  # default is 0, which means following the threading runtime
+end
+
+# TODO: add a local threading test
+
 # Run all the LinearAlgebra stdlib tests, but with NVPL. We still
 # use `Base.runtests()` to get multithreaded, distributed execution
 # to cut down on CI times, and also to restart workers that trip over

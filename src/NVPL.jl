@@ -13,9 +13,30 @@ using LinearAlgebra, Logging
     THREADING_GNU
 end
 
-# Consider adding service APIs
-# - https://docs.nvidia.com/nvpl/latest/blas/api/service.html
-# - https://docs.nvidia.com/nvpl/latest/lapack/api/service.html
+const _libnvpl_blas_path = Ref{String}()
+const _libnvpl_lapack_path = Ref{String}()
+
+_nvpl_int_to_version(v::Cint) = VersionNumber(v ÷ 10000, (v % 10000) ÷ 100, v % 100)
+
+for lib in ("blas", "lapack")
+    @eval begin
+        function $(Symbol("$lib","_get_version"))()::VersionNumber
+            _nvpl_int_to_version(ccall(($(string("nvpl_","$lib","_get_version")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cint, ()))
+        end
+
+        function $(Symbol("$lib","_get_max_threads"))()::Int
+            Int(ccall(($(string("nvpl_","$lib","_get_max_threads")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cint, ()))
+        end
+
+        function $(Symbol("$lib","_set_num_threads"))(nthr::Int)
+            ccall(($(string("nvpl_","$lib","_set_num_threads")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cvoid, (Ref{Cint},), Cint(nthr))
+        end
+
+        function $(Symbol("$lib","_set_num_threads_local"))(nthr_local::Int)
+            ccall(($(string("nvpl_","$lib","_set_num_threads_local")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cvoid, (Ref{Cint},), Cint(nthr_local))
+        end
+    end
+end
 
 function __init__()
     lbt_forward_to_nvpl()
@@ -30,34 +51,32 @@ function lbt_forward_to_nvpl(; layer::Threading = THREADING_GNU)
     # Use OpenBLAS for sgemmt and dgemmt
     BLAS.lbt_forward(OpenBLAS_jll.libopenblas_path; clear=true)
 
+    # Determine threading layer and int type
     if layer == THREADING_GNU
         if Base.USE_BLAS64
-            # Load ILP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_ilp64_gomp; clear=false)
-            # Load ILP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_ilp64_gomp; clear=false)
+            _libnvpl_blas_path[] = libnvpl_blas_ilp64_gomp
+            _libnvpl_lapack_path[] = libnvpl_lapack_ilp64_gomp
         else
-            # Load LP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_lp64_gomp; clear=false)
-            # Load LP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_lp64_gomp; clear=false)
+            _libnvpl_blas_path[] = libnvpl_blas_lp64_gomp
+            _libnvpl_lapack_path[] = libnvpl_lapack_lp64_gomp
         end
     elseif layer == THREADING_SEQUENTIAL
         if Base.USE_BLAS64
-            # Load ILP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_ilp64_seq; clear=false)
-            # Load ILP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_ilp64_seq; clear=false)
+            _libnvpl_blas_path[] = libnvpl_blas_ilp64_seq
+            _libnvpl_lapack_path[] = libnvpl_lapack_ilp64_seq
         else
-            # Load LP64 BLAS forwards
-            BLAS.lbt_forward(libnvpl_blas_lp64_seq; clear=false)
-            # Load LP64 LAPACK forwards
-            BLAS.lbt_forward(libnvpl_lapack_lp64_seq; clear=false)
+            _libnvpl_blas_path[] = libnvpl_blas_lp64_seq
+            _libnvpl_lapack_path[] = libnvpl_lapack_lp64_seq
         end
     else
         isinteractive() && @warn "Unsupported NVPL threading layer: $layer"
         return
     end
+
+    # Load BLAS forwards
+    BLAS.lbt_forward(_libnvpl_blas_path[]; clear=false)
+    # Load LAPACK forwards
+    BLAS.lbt_forward(_libnvpl_lapack_path[]; clear=false)
 end
 
 end # module

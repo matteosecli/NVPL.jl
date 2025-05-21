@@ -44,6 +44,12 @@ jobs:
           using Pkg
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.build("NVPL"; verbose=true)
+      - name: Install NVIDIA Performance Libraries
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/sbsa/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get -y install nvpl
       - uses: julia-actions/julia-runtest@latest
         env:
           # Loading NVPL during the tests can create an environment variable for OpenMP that is visible after the tests (MKL.jl#130)
