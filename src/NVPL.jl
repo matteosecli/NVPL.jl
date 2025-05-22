@@ -18,31 +18,19 @@ const _libnvpl_lapack_path = Ref{String}()
 
 _nvpl_int_to_version(v::Cint) = VersionNumber(v ÷ 10000, (v % 10000) ÷ 100, v % 100)
 
-for lib in ("blas", "lapack")
-    @eval begin
-        function $(Symbol("$lib","_get_version"))()::VersionNumber
-            _nvpl_int_to_version(ccall(($(string("nvpl_","$lib","_get_version")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cint, ()))
-        end
-
-        function $(Symbol("$lib","_get_max_threads"))()::Int
-            Int(ccall(($(string("nvpl_","$lib","_get_max_threads")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cint, ()))
-        end
-
-        function $(Symbol("$lib","_set_num_threads"))(nthr::Int)
-            ccall(($(string("nvpl_","$lib","_set_num_threads")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cvoid, (Ref{Cint},), Cint(nthr))
-        end
-
-        function $(Symbol("$lib","_set_num_threads_local"))(nthr_local::Int)
-            ccall(($(string("nvpl_","$lib","_set_num_threads_local")), $(Symbol("_libnvpl_","$lib","_path"))[]), Cvoid, (Ref{Cint},), Cint(nthr_local))
-        end
-    end
-end
+include("libnvpl_blas_api.jl")
+include("libnvpl_lapack_api.jl")
 
 function __init__()
     lbt_forward_to_nvpl()
 end
 
-function lbt_forward_to_nvpl(; layer::Threading = THREADING_GNU)
+# Note: LAPACK is disabled by default. As NVIDIA writes: 
+#   "As the current release of NVPL LAPACK has a limited scope of optimizations,
+#   some of the admittedly important routines have not been optimized yet."
+#     -- source: https://docs.nvidia.com/nvpl/latest/lapack/api/overview.html
+# In limited tests on Grace, NVPL LAPACK seems to be significantly slower than OpenBLAS LAPACK.
+function lbt_forward_to_nvpl(; layer::Threading = THREADING_GNU, lapack=false)::Nothing
     if !NVPL_jll.is_available()
         isinteractive() && @warn "NVPL is not available/installed."
         return
@@ -52,6 +40,7 @@ function lbt_forward_to_nvpl(; layer::Threading = THREADING_GNU)
     BLAS.lbt_forward(OpenBLAS_jll.libopenblas_path; clear=true)
 
     # Determine threading layer and int type
+    # Note: separate BLAS/LAPACK threading layers seem to work as well...
     if layer == THREADING_GNU
         if Base.USE_BLAS64
             _libnvpl_blas_path[] = libnvpl_blas_ilp64_gomp
@@ -73,10 +62,15 @@ function lbt_forward_to_nvpl(; layer::Threading = THREADING_GNU)
         return
     end
 
+    # Load LAPACK forwards
+    # Note: loading later would overshadow the BLAS forwards.
+    # Not much of a difference right now, but relevant in case we decide
+    # to allow separate threading layers for LAPACK and BLAS.
+    lapack && BLAS.lbt_forward(_libnvpl_lapack_path[]; clear=false)
     # Load BLAS forwards
     BLAS.lbt_forward(_libnvpl_blas_path[]; clear=false)
-    # Load LAPACK forwards
-    BLAS.lbt_forward(_libnvpl_lapack_path[]; clear=false)
+
+    return nothing
 end
 
 end # module

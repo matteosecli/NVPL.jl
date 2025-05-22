@@ -8,11 +8,15 @@ This package requires Julia 1.9+, and only covers the forwarding of BLAS and LAP
 
 ## Usage
 
-If you want to use `NVPL.jl` in your project, make sure it is the first package you load before any other package.
+Just do
+```julia
+using NVPL
+```
+after installation and you're good to go. It's probably a good idea to load it before other packages, but not strictly necessary as it is for e.g. MKL.jl, as NVPL doesn't include its own OpenMP runtime and defaults to the GNU OpenMP one.
 
 ## Requirements
 
-NVPL is only available on Linux 64-bit systems, and only for CPUs with [Armv8.1-A or later architecture](https://docs.nvidia.com/nvpl/latest/#cpu-support). ILP64 is used by default; OpenBLAS is used as a fallback for `{s,d}gemmt`.
+NVPL is only available on Linux 64-bit systems, and only for CPUs with [Armv8.1-A or later architecture](https://docs.nvidia.com/nvpl/latest/#cpu-support). ILP64 is used by default; OpenBLAS is used as a fallback for `{s,d}gemmt` until they are implemented (NVIDIA Bug ID: [#5292829](https://partners.nvidia.com/bug/viewbug/5292829)).
 
 ## Installation
 
@@ -38,7 +42,6 @@ LinearAlgebra.BLAS.LBTConfig
 Libraries:
 ├ [ILP64] libopenblas64_.so
 ├ [ILP64] libnvpl_blas_ilp64_gomp.so
-└ [ILP64] libnvpl_lapack_ilp64_gomp.so
 ```
 
 ## Threading layer
@@ -52,6 +55,16 @@ using NVPL
 NVPL.lbt_forward_to_nvpl(layer = NVPL.THREADING_SEQUENTIAL)
 ```
 The default is `layer = NVPL.THREADING_GNU`.
+
+## LAPACK forwarding
+
+LAPACK forwarding is currently disabled by default, due to the [admittedly limited optimizations](https://docs.nvidia.com/nvpl/latest/lapack/api/overview.html). You can enabled it via
+
+```julia
+using NVPL
+
+NVPL.lbt_forward_to_nvpl(lapack = true)
+```
 
 ## Service APIs
 

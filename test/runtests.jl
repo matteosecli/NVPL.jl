@@ -26,7 +26,6 @@ end
 @testset "Sanity Tests" begin
     @test LinearAlgebra.BLAS.get_config().loaded_libs[1].libname == OpenBLAS_jll.libopenblas_path
     @test LinearAlgebra.BLAS.get_config().loaded_libs[2].libname == libnvpl_blas_ilp64_gomp
-    @test LinearAlgebra.BLAS.get_config().loaded_libs[3].libname == libnvpl_lapack_ilp64_gomp
     @test LinearAlgebra.peakflops() > 0
 end
 
@@ -61,6 +60,11 @@ end
     NVPL.blas_set_num_threads(0)  # default is 0, which means following the threading runtime
     NVPL.lapack_set_num_threads(1)
     NVPL.lapack_set_num_threads(0)  # default is 0, which means following the threading runtime
+    # Test sequential threading layer
+    NVPL.lbt_forward_to_nvpl(layer=NVPL.THREADING_SEQUENTIAL)
+    @test NVPL.blas_get_max_threads() == 1
+    @test NVPL.lapack_get_max_threads() == 1
+    NVPL.lbt_forward_to_nvpl(layer=NVPL.THREADING_GNU)
 end
 
 # TODO: add a local threading test
